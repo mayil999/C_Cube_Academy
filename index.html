@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>கிரிக்கெட் அணி தேர்வு</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #0f4c3a 0%, #1a7a4a 50%, #0f4c3a 100%);
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    background: #ffffff;
+    border-radius: 16px;
+    max-width: 560px;
+    width: 100%;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  h1 {
+    text-align: center;
+    color: #0f4c3a;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .counter {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .counter.ok { background: #e6f7ec; color: #1a7a4a; }
+  .counter.full { background: #d1f2dd; color: #0f4c3a; }
+
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background: #f7f9f8;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  li:hover { background: #eef6f1; }
+  li.selected { background: #e6f7ec; border-color: #1a7a4a; }
+  li input {
+    margin-right: 12px;
+    width: 20px;
+    height: 20px;
+    accent-color: #1a7a4a;
+    cursor: pointer;
+  }
+  li .num { width: 26px; color: #999; font-size: 14px; }
+  li .name { font-size: 16px; color: #222; flex: 1; }
+  .tag {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+  }
+  .tag.captain { background: #ffd23f; color: #6b4e00; }
+  .tag.keeper { background: #cfe9ff; color: #0b4a7a; }
+  li.disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .actions { margin-top: 18px; display: flex; gap: 10px; }
+  button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .reset-btn { background: #eee; color: #444; }
+  .confirm-btn { background: #1a7a4a; color: #fff; }
+
+  .result {
+    margin-top: 18px;
+    padding: 14px;
+    background: #0f4c3a;
+    color: #fff;
+    border-radius: 10px;
+    display: none;
+  }
+  .result h3 { margin: 0 0 6px 0; font-size: 16px; }
+  .order-hint { font-size: 12.5px; color: #cfe9da; text-align: center; margin-bottom: 12px; }
+  .order-list { list-style: none; padding: 0; margin: 0; }
+  .order-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .order-item:hover { background: rgba(255,255,255,0.15); }
+  .order-item.picked { border-color: #ffd23f; background: rgba(255,210,63,0.18); }
+  .order-item .pos {
+    width: 28px;
+    height: 28px;
+    background: #ffffff;
+    color: #0f4c3a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .order-item .oname { flex: 1; font-size: 15px; }
+  .back-btn {
+    background: #eee;
+    color: #444;
+    margin-top: 14px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="selectionSection">
+    <h1>🏏 கிரிக்கெட் அணி தேர்வு</h1>
+    <div class="subtitle">19 வீரர்களிலிருந்து 11 பேரை தேர்வு செய்யவும்</div>
+
+    <div class="counter ok" id="counter">0 / 11 தேர்வு செய்யப்பட்டது</div>
+
+    <ul id="playerList"></ul>
+
+    <div class="actions">
+      <button class="reset-btn" onclick="resetSelection()">மீட்டமை</button>
+      <button class="confirm-btn" id="confirmBtn" onclick="confirmTeam()" disabled>அணியை உறுதி செய்</button>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <h3>✅ பேட்டிங் ஆர்டர்</h3>
+    <div class="order-hint">இடம் மாற்ற: ஒரு வீரரை க்ளிக் செய்யவும், பின் இன்னொருவரை க்ளிக் செய்தால் இருவரின் இடமும் மாறும் (Swap)</div>
+    <ul class="order-list" id="orderList"></ul>
+    <button class="back-btn" onclick="backToSelection()">⬅ மீண்டும் தேர்வு செய்ய</button>
+  </div>
+</div>
+
+<script>
+  const players = [
+    { name: "Mayilvaganaprabhu", role: "captain" },
+    { name: "Gowtham" },
+    { name: "Kaliraj" },
+    { name: "Senthil Raj" },
+    { name: "Prakash" },
+    { name: "Loganathan" },
+    { name: "Kunguma Vishnu" },
+    { name: "Balasubramanian" },
+    { name: "Dharaneesh" },
+    { name: "Keerthi" },
+    { name: "Yogesh", role: "keeper" },
+    { name: "Tariq" },
+    { name: "Rahul priyan" },
+    { name: "Balamurugan", role: "keeper" },
+    { name: "Sekar" },
+    { name: "Manivannan" },
+    { name: "VISHNUKUMAR" },
+    { name: "Gogulakrishnan" },
+    { name: "Karthi" }
+  ];
+
+  const MAX_SELECT = 11;
+  let selected = new Set();
+  let battingOrder = [];
+  let swapPick = null;
+
+  const selectionSection = document.getElementById('selectionSection');
+  const listEl = document.getElementById('playerList');
+  const counterEl = document.getElementById('counter');
+  const confirmBtn = document.getElementById('confirmBtn');
+  const resultEl = document.getElementById('result');
+  const orderListEl = document.getElementById('orderList');
+
+  function tagHtml(role) {
+    if (role === 'captain') return '<span class="tag captain">C</span>';
+    if (role === 'keeper') return '<span class="tag keeper">WK</span>';
+    return '';
+  }
+
+  function render() {
+    listEl.innerHTML = '';
+    players.forEach((p, idx) => {
+      const li = document.createElement('li');
+      const isSelected = selected.has(idx);
+      const isDisabled = !isSelected && selected.size >= MAX_SELECT;
+      li.className = (isSelected ? 'selected ' : '') + (isDisabled ? 'disabled' : '');
+      li.innerHTML = `
+        <input type="checkbox" ${isSelected ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} data-idx="${idx}">
+        <span class="num">${idx + 1}.</span>
+        <span class="name">${p.name}${tagHtml(p.role)}</span>
+      `;
+      li.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'INPUT') toggleSelect(idx);
+      });
+      li.querySelector('input').addEventListener('change', () => toggleSelect(idx));
+      listEl.appendChild(li);
+    });
+    updateCounter();
+  }
+
+  function toggleSelect(idx) {
+    if (selected.has(idx)) {
+      selected.delete(idx);
+    } else {
+      if (selected.size >= MAX_SELECT) return;
+      selected.add(idx);
+    }
+    render();
+    resultEl.style.display = 'none';
+  }
+
+  function updateCounter() {
+    const count = selected.size;
+    counterEl.textContent = `${count} / ${MAX_SELECT} தேர்வு செய்யப்பட்டது`;
+    counterEl.className = 'counter ' + (count === MAX_SELECT ? 'full' : 'ok');
+    confirmBtn.disabled = count !== MAX_SELECT;
+  }
+
+  function resetSelection() {
+    selected.clear();
+    render();
+    resultEl.style.display = 'none';
+  }
+
+  function confirmTeam() {
+    if (selected.size !== MAX_SELECT) return;
+    battingOrder = [...selected]; // default order = selection order
+    swapPick = null;
+    renderOrderList();
+    selectionSection.style.display = 'none';
+    resultEl.style.display = 'block';
+  }
+
+  function backToSelection() {
+    selectionSection.style.display = 'block';
+    resultEl.style.display = 'none';
+  }
+
+  function renderOrderList() {
+    orderListEl.innerHTML = '';
+    battingOrder.forEach((idx, pos) => {
+      const p = players[idx];
+      const li = document.createElement('li');
+      li.className = 'order-item' + (swapPick === pos ? ' picked' : '');
+      li.innerHTML = `
+        <span class="pos">${pos + 1}</span>
+        <span class="oname">${p.name}${tagHtml(p.role)}</span>
+      `;
+      li.addEventListener('click', () => handleOrderClick(pos));
+      orderListEl.appendChild(li);
+    });
+  }
+
+  function handleOrderClick(pos) {
+    if (swapPick === null) {
+      swapPick = pos;
+    } else if (swapPick === pos) {
+      swapPick = null;
+    } else {
+      const tmp = battingOrder[swapPick];
+      battingOrder[swapPick] = battingOrder[pos];
+      battingOrder[pos] = tmp;
+      swapPick = null;
+    }
+    renderOrderList();
+  }
+
+  render();
+</script>
+</body>
+</html>
